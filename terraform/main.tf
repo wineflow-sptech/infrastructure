@@ -1,0 +1,100 @@
+﻿terraform {
+  required_version = ">= 1.5"
+
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+    tls = {
+      source  = "hashicorp/tls"
+      version = "~> 4.0"
+    }
+    local = {
+      source  = "hashicorp/local"
+      version = "~> 2.0"
+    }
+  }
+}
+
+provider "aws" {
+  region = "us-east-1"
+}
+
+locals {
+  environment = "prod"
+  buckets     = toset(["bronze", "silver", "gold"])
+}
+
+# -- VPC padrao ----------------------------------------------------------------
+data "aws_vpc" "default" {
+  default = true
+}
+
+data "aws_subnets" "default" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.default.id]
+  }
+}
+
+# -- AMI Ubuntu Server 22.04 ---------------------------------------------------
+data "aws_ami" "ubuntu" {
+  most_recent = true
+  owners      = ["099720109477"] # Canonical
+
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
+  }
+}
+
+# -- Chave SSH (a .pem e salva em terraform/kali-key.pem) ------------------------
+resource "tls_private_key" "kali" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
+
+resource "aws_key_pair" "kali" {
+  key_name   = "wineflow-kali-${local.environment}"
+  public_key = tls_private_key.kali.public_key_openssh
+}
+
+resource "local_file" "kali_pem" {
+  content         = tls_private_key.kali.private_key_pem
+  filename        = "${path.module}/kali-key.pem"
+  file_permission = "0600"
+}
+
+# -- EC2 -----------------------------------------------------------------------
+module "ec2" {
+  source = "./modules/ec2"
+
+  environment          = local.environment
+  instance_name        = "kali"
+  ami_id               = data.aws_ami.ubuntu.id
+  instance_type        = "t3.medium"
+  root_volume_size     = 30
+  vpc_id               = data.aws_vpc.default.id
+  subnet_id            = sort(data.aws_subnets.default.ids)[0]
+  key_name             = aws_key_pair.kali.key_name
+  ingress_ports        = [22, 6901]
+  iam_instance_profile = "LabInstanceProfile"
+}
+
+# -- Buckets S3 (sufixo aleatorio gerado pela AWS via bucket_prefix) -------------
+module "s3" {
+  for_each = local.buckets
+  source   = "./modules/s3"
+
+  environment = local.environment
+  bucket_name = "wineflow-${each.key}"
+}
+
+output "kali_public_ip" {
+  value = module.ec2.public_ip
+}
+
+output "bucket_names" {
+  value = { for k, m in module.s3 : k => m.bucket_id }
+}
