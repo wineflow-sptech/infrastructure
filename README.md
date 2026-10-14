@@ -4,12 +4,12 @@ Infraestrutura como código (Terraform) do WineFlow na AWS.
 
 ## O que é provisionado
 
-| Recurso | Detalhes |
-|---|---|
-| EC2 `kali` | Ubuntu Server 22.04, `t3.medium`, SSD 30 GB (gp3), `LabInstanceProfile` |
-| Security Group | Entrada TCP nas portas 22 (SSH) e 6901 |
-| Chave SSH | Gerada pelo Terraform e salva em `terraform/kali-key.pem` |
-| S3 | 3 buckets: `wineflow-bronze-`, `wineflow-silver-` e `wineflow-gold-` + sufixo aleatório da AWS |
+| Recurso        | Detalhes                                                                                       |
+| -------------- | ---------------------------------------------------------------------------------------------- |
+| EC2 `kali`     | Ubuntu Server 22.04, `t3.medium`, SSD 30 GB (gp3), `LabInstanceProfile`                        |
+| Security Group | Entrada TCP nas portas 22 (SSH) e 6901                                                         |
+| Chave SSH      | Gerada pelo Terraform e salva em `terraform/kali-key.pem`                                      |
+| S3             | 3 buckets: `wineflow-bronze-`, `wineflow-silver-` e `wineflow-gold-` + sufixo aleatório da AWS |
 
 Região: `us-east-1`. A rede usa a **VPC padrão** da conta. O módulo `terraform/modules/vpc` existe, mas não é usado no `main.tf`.
 
@@ -33,20 +33,21 @@ infrastructure/
 ## Pré-requisitos
 
 - [Terraform](https://developer.hashicorp.com/terraform/downloads) >= 1.5
-- Credenciais AWS (no AWS Academy: *AWS Details* > *AWS CLI*)
+- Credenciais AWS (no AWS Academy: _AWS Details_ > _AWS CLI_)
 
 ## Configuração
 
-1. Copie o modelo e preencha com as credenciais da AWS:
+1. Copie o modelo e preencha com as credenciais da AWS. No key_name coloque apenas o nome da chave, sem o .pem:
 
    ```bash
    cp .env.example .env
    ```
 
    ```env
-   AWS_ACCESS_KEY_ID=
-   AWS_SECRET_ACCESS_KEY=
-   AWS_SESSION_TOKEN=
+   aws_access_key_id=
+   aws_secret_access_key=
+   aws_session_token=
+   key_name=
    ```
 
 2. No AWS Academy o token expira junto com a sessão do lab. Quando aparecer `ExpiredToken`, atualize o `.env`.

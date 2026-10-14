@@ -1,9 +1,9 @@
 output "bucket_id" {
   description = "ID/Name do bucket S3"
-  value       = aws_s3_bucket.this.id
+  value       = local.bucket_full_name
 }
 
 output "bucket_arn" {
   description = "ARN do bucket S3"
-  value       = aws_s3_bucket.this.arn
+  value       = "arn:aws:s3:::${local.bucket_full_name}"
 }

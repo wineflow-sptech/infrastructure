@@ -6,12 +6,12 @@
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
-    tls = {
-      source  = "hashicorp/tls"
-      version = "~> 4.0"
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.0"
     }
-    local = {
-      source  = "hashicorp/local"
+    external = {
+      source  = "hashicorp/external"
       version = "~> 2.0"
     }
   }
@@ -49,21 +49,11 @@ data "aws_ami" "ubuntu" {
   }
 }
 
-# -- Chave SSH (a .pem e salva em terraform/kali-key.pem) ------------------------
-resource "tls_private_key" "kali" {
-  algorithm = "RSA"
-  rsa_bits  = 4096
-}
-
-resource "aws_key_pair" "kali" {
-  key_name   = "wineflow-kali-${local.environment}"
-  public_key = tls_private_key.kali.public_key_openssh
-}
-
-resource "local_file" "kali_pem" {
-  content         = tls_private_key.kali.private_key_pem
-  filename        = "${path.module}/kali-key.pem"
-  file_permission = "0600"
+# -- Key pair SSH (criado manualmente por cada usuario na AWS; informe o nome) --
+variable "key_name" {
+  description = "Nome do key pair SSH ja existente na AWS (criado manualmente por cada usuario). Deixe vazio para subir sem acesso SSH."
+  type        = string
+  default     = ""
 }
 
 # -- EC2 -----------------------------------------------------------------------
@@ -77,7 +67,7 @@ module "ec2" {
   root_volume_size     = 30
   vpc_id               = data.aws_vpc.default.id
   subnet_id            = sort(data.aws_subnets.default.ids)[0]
-  key_name             = aws_key_pair.kali.key_name
+  key_name             = var.key_name
   ingress_ports        = [22, 6901]
   iam_instance_profile = "LabInstanceProfile"
 }
