@@ -25,6 +25,14 @@ foreach ($name in "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOK
         Set-Item -Path "Env:$name" -Value $envVars[$name]
     }
 }
+
+# -- Key pair SSH (cada dev cria o seu na AWS e informa o nome no .env) -------
+# KEY_NAME=nome-do-seu-key-pair no .env -> instancia sobe associada a ele.
+# Sem KEY_NAME, a instancia sobe sem key pair (sem acesso SSH).
+if ($envVars.ContainsKey("KEY_NAME")) {
+    Set-Item -Path "Env:TF_VAR_key_name" -Value $envVars["KEY_NAME"]
+}
+
 $varArgs = @("-refresh=false") # SCP do Academy nega s3:GetBucketObjectLockConfiguration, quebrando o refresh dos buckets
 
 # -- Terraform Init ------------------------------------------------------------
