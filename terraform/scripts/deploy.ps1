@@ -33,6 +33,11 @@ if ($envVars.ContainsKey("KEY_NAME")) {
     Set-Item -Path "Env:TF_VAR_key_name" -Value $envVars["KEY_NAME"]
 }
 
+# -- Token do LocalStack usado pelo scripts/kali-setup.sh (user_data) ---------
+if ($envVars.ContainsKey("LOCALSTACK_AUTH_TOKEN")) {
+    Set-Item -Path "Env:TF_VAR_localstack_auth_token" -Value $envVars["LOCALSTACK_AUTH_TOKEN"]
+}
+
 $varArgs = @("-refresh=false") # SCP do Academy nega s3:GetBucketObjectLockConfiguration, quebrando o refresh dos buckets
 
 # -- Terraform Init ------------------------------------------------------------
