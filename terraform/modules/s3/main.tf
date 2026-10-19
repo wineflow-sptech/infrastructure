@@ -68,6 +68,6 @@ resource "null_resource" "bucket" {
     interpreter = ["PowerShell", "-Command"]
     # Nunca deve rodar de fato: a SCP do Academy nega s3:DeleteBucket, e o
     # destroy.ps1 ja exclui este modulo do destroy. Mantido so por seguranca.
-    command     = "aws s3api delete-bucket --bucket ${self.triggers.bucket_name} --region us-east-1"
+    command = "aws s3api delete-bucket --bucket ${self.triggers.bucket_name} --region us-east-1"
   }
 }

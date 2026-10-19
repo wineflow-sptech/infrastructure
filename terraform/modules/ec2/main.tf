@@ -44,16 +44,16 @@ resource "aws_instance" "this" {
   subnet_id     = var.subnet_id
 
   vpc_security_group_ids = [aws_security_group.this.id]
-  key_name                = var.key_name != "" ? var.key_name : null
+  key_name               = var.key_name != "" ? var.key_name : null
 
   root_block_device {
     volume_size = var.root_volume_size
     volume_type = "gp3"
   }
 
-  iam_instance_profile = var.iam_instance_profile != "" ? var.iam_instance_profile : null
-  user_data            = var.user_data != "" ? var.user_data : null
-  source_dest_check    = var.source_dest_check
+  iam_instance_profile        = var.iam_instance_profile != "" ? var.iam_instance_profile : null
+  user_data                   = var.user_data != "" ? var.user_data : null
+  source_dest_check           = var.source_dest_check
   user_data_replace_on_change = true
 
   tags = {
