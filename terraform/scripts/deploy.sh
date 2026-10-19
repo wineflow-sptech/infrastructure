@@ -16,15 +16,21 @@ if [[ ! -f "$DOTENV_PATH" ]]; then
 fi
 
 # Exporta credenciais AWS (lidas pelo provider), sem executar o conteudo do .env
+# Comparacao case-insensitive: o .env usa chaves minusculas (aws_access_key_id).
 while IFS='=' read -r key value; do
     key="${key//[$'\r ']/}"
     [[ -z "$key" || "$key" == \#* ]] && continue
     value="${value%$'\r'}"
     value="${value#[\"\']}"
     value="${value%[\"\']}"
-    case "$key" in
+    key_upper="$(echo "$key" | tr '[:lower:]' '[:upper:]')"
+    case "$key_upper" in
         AWS_ACCESS_KEY_ID|AWS_SECRET_ACCESS_KEY|AWS_SESSION_TOKEN|AWS_DEFAULT_REGION)
-            export "$key=$value" ;;
+            export "$key_upper=$value" ;;
+        KEY_NAME)
+            export "TF_VAR_key_name=$value" ;;
+        LOCALSTACK_AUTH_TOKEN)
+            export "TF_VAR_localstack_auth_token=$value" ;;
     esac
 done < "$DOTENV_PATH"
 

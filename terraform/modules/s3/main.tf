@@ -7,7 +7,16 @@
 # Como o destroy de bucket e bloqueado pela SCP, os buckets nunca sao
 # apagados (ver scripts/destroy.ps1, que exclui o modulo s3 do destroy) -
 # por isso, antes de criar um novo, verificamos se ja existe um bucket com
-# o prefixo "<bucket_name>-" e reaproveitamos ele em vez de criar outro.
+# o prefixo "<bucket_name>-" e reaproveitamos o nome dele em vez de gerar um
+# novo sufixo aleatorio.
+#
+# O null_resource em si NAO tem count condicionado a essa consulta: uma vez
+# criado, create-bucket/put-bucket-encryption/put-public-access-block sao
+# idempotentes na AWS (re-chamar contra um bucket que voce ja possui so
+# confirma o estado, nao erra) - diferente de usar `count` baseado numa
+# consulta ao vivo, que oscilaria entre criar/destruir a cada apply (o
+# proprio bucket que o Terraform acabou de criar passaria a "existir" na
+# consulta seguinte, e o destroy-time provisioner bateria na mesma SCP).
 data "external" "existing_bucket" {
   program = ["PowerShell", "-Command", <<-EOT
     $ErrorActionPreference = "Stop"
@@ -34,8 +43,6 @@ locals {
 }
 
 resource "null_resource" "bucket" {
-  count = local.existing_bucket == "" ? 1 : 0
-
   triggers = {
     bucket_name = local.bucket_full_name
   }
